@@ -2,6 +2,13 @@
 name = "x3dh-ke"
 version = "0.1.0"
 edition = "2018"
+authors = ["Hannes Furmans"]
+license = "MIT"
+description = "Implementation of X3DH"
+homepage = "https://github.com/Decentrailzed-Communication-System/x3dh-ke"
+repository = "https://github.com/Decentrailzed-Communication-System/x3dh-ke"
+readme = "README.md"
+keywords = ["signal", "crypto", "cryptographie", "x3dh"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
