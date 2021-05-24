@@ -1,3 +1,7 @@
+//! [![Crate](https://img.shields.io/crates/v/x3dh-ke)](https://crates.io/crates/x3dh-ke)
+//! [![License](https://img.shields.io/crates/l/x3dh-ke)](https://github.com/Decentrailzed-Communication-System/x3dh-ke/blob/67f5470a0e3199c79700410dfd207c93cf63d5be/LICENSE)
+//! [![Actions](https://img.shields.io/github/workflow/status/Decentrailzed-Communication-System/x3dh-ke/Rust)](https://github.com/Decentrailzed-Communication-System/x3dh-ke/actions/workflows/rust.yml)
+//!
 //! # Implementation of X3DH
 //! Implementation of extended triple diffie hellman written in Rust, as described by [Signal][1].
 //! WARNING! This crate hasn't been reviewed and may include serious faults. Use with care.
