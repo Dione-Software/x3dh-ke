@@ -9,6 +9,7 @@ homepage = "https://github.com/Decentrailzed-Communication-System/x3dh-ke"
 repository = "https://github.com/Decentrailzed-Communication-System/x3dh-ke"
 readme = "README.md"
 keywords = ["signal", "crypto", "cryptographie", "x3dh"]
+documentation = "https://docs.rs/x3dh-ke/0.1.0/x3dh_ke/"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
