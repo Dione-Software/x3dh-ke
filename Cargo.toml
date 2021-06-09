@@ -15,7 +15,7 @@ documentation = "https://docs.rs/x3dh-ke/0.1.0/x3dh_ke/"
 
 [dependencies]
 rand_core = {version = "0.6.2", features = ["getrandom"]}
-p256 = {version = "0.8.1", features = ["zeroize", "ecdsa", "ecdh", "arithmetic", "pem"]}
+p256 = {version = "0.9.0", features = ["zeroize", "ecdsa", "ecdh", "arithmetic", "pem"]}
 hkdf = "0.11.0"
 sha2 = "0.9.5"
 serde = {version = "1.0.126", optional = true}
