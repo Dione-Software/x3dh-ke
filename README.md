@@ -1,6 +1,6 @@
 [![Crate](https://img.shields.io/crates/v/x3dh-ke)](https://crates.io/crates/x3dh-ke)
-[![License](https://img.shields.io/github/license/Dione-Software/x3dh-ke)](https://github.com/Dione-Software/x3dh-ke/blob/master/LICENSE)
-[![Coverage Status](https://coveralls.io/repos/github/Dione-Software/x3dh-ke/badge.svg?branch=main)](https://coveralls.io/github/Dione-Software/x3dh-ke?branch=master)
+[![License](https://img.shields.io/github/license/Dione-Software/x3dh-ke)](https://github.com/Dione-Software/x3dh-ke/blob/main/LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/Dione-Software/x3dh-ke/badge.svg?branch=master)](https://coveralls.io/github/Dione-Software/x3dh-ke?branch=master)
 [![Workflow Status](https://github.com/Dione-Software/x3dh-ke/actions/workflows/rust.yml/badge.svg)](https://github.com/Dione-Software/x3dh-ke/actions/workflows/rust.yml)
 ![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
 
@@ -52,6 +52,6 @@ let _iks = ika.strip(); // Without private key
 
 [1]: https://signal.org/docs/specifications/x3dh/
 
-Current version: 0.1.2
+Current version: 0.1.3
 
 License: MIT 
