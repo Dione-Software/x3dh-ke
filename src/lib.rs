@@ -1,7 +1,3 @@
-//! [![Crate](https://img.shields.io/crates/v/x3dh-ke)](https://crates.io/crates/x3dh-ke)
-//! [![License](https://img.shields.io/crates/l/x3dh-ke)](https://github.com/Decentrailzed-Communication-System/x3dh-ke/blob/67f5470a0e3199c79700410dfd207c93cf63d5be/LICENSE)
-//! [![Actions](https://img.shields.io/github/workflow/status/Decentrailzed-Communication-System/x3dh-ke/Rust)](https://github.com/Decentrailzed-Communication-System/x3dh-ke/actions/workflows/rust.yml)
-//!
 //! # Implementation of X3DH
 //! Implementation of extended triple diffie hellman written in Rust, as described by [Signal][1].
 //! WARNING! This crate hasn't been reviewed and may include serious faults. Use with care.
@@ -77,7 +73,7 @@ pub struct IdentityKey(Option<SecretKey>, PublicKey);
 impl Key for IdentityKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(private_key.secret_scalar());
+        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
         Self(Some(private_key), public_key)
     }
 
@@ -134,7 +130,7 @@ impl From<&IdentityKey> for ExKey {
 impl Drop for IdentityKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(self.0.as_ref().unwrap().secret_scalar());
+        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
     }
 }
 
@@ -143,7 +139,7 @@ pub struct EphemeralKey(Option<SecretKey>, PublicKey);
 impl Key for EphemeralKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(private_key.secret_scalar());
+        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
         Self(Some(private_key), public_key)
     }
 
@@ -200,7 +196,7 @@ impl From<&EphemeralKey> for ExKey {
 impl Drop for EphemeralKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(self.0.as_ref().unwrap().secret_scalar());
+        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
     }
 }
 
@@ -215,7 +211,7 @@ impl SignedPreKey {
 impl Key for SignedPreKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(private_key.secret_scalar());
+        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
         Self(Some(private_key), public_key)
     }
 
@@ -272,7 +268,7 @@ impl From<&SignedPreKey> for ExKey {
 impl Drop for SignedPreKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(self.0.as_ref().unwrap().secret_scalar());
+        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
     }
 }
 
@@ -281,7 +277,7 @@ pub struct OneTimePreKey(Option<SecretKey>, PublicKey);
 impl Key for OneTimePreKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(private_key.secret_scalar());
+        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
         Self(Some(private_key), public_key)
     }
 
@@ -338,7 +334,7 @@ impl From<&OneTimePreKey> for ExKey {
 impl Drop for OneTimePreKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(self.0.as_ref().unwrap().secret_scalar());
+        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
     }
 }
 
@@ -392,7 +388,7 @@ pub trait Key {
         let sk = self.ex_private_key().unwrap();
         let pk = other.ex_public_key();
         diffie_hellman(
-            sk.secret_scalar(),
+            sk.to_secret_scalar().clone(),
             pk.as_affine(),
         )
     }

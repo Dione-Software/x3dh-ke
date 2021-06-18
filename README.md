@@ -1,8 +1,10 @@
-# x3dh-ke
-
 [![Crate](https://img.shields.io/crates/v/x3dh-ke)](https://crates.io/crates/x3dh-ke)
-[![License](https://img.shields.io/crates/l/x3dh-ke)](https://github.com/Decentrailzed-Communication-System/x3dh-ke/blob/67f5470a0e3199c79700410dfd207c93cf63d5be/LICENSE)
-[![Actions](https://img.shields.io/github/workflow/status/Decentrailzed-Communication-System/x3dh-ke/Rust)](https://github.com/Decentrailzed-Communication-System/x3dh-ke/actions/workflows/rust.yml)
+[![License](https://img.shields.io/github/license/Dione-Software/x3dh-ke)](https://github.com/Dione-Software/x3dh-ke/blob/master/LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/Dione-Software/x3dh-ke/badge.svg?branch=main)](https://coveralls.io/github/Dione-Software/x3dh-ke?branch=master)
+[![Workflow Status](https://github.com/Dione-Software/x3dh-ke/actions/workflows/rust.yml/badge.svg)](https://github.com/Dione-Software/x3dh-ke/actions/workflows/rust.yml)
+![Maintenance](https://img.shields.io/badge/maintenance-activly--developed-brightgreen.svg)
+
+# x3dh-ke
 
 ## Implementation of X3DH
 Implementation of extended triple diffie hellman written in Rust, as described by [Signal][1].
@@ -50,4 +52,6 @@ let _iks = ika.strip(); // Without private key
 
 [1]: https://signal.org/docs/specifications/x3dh/
 
-License: MIT
+Current version: 0.1.2
+
+License: MIT 
