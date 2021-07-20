@@ -68,7 +68,7 @@ use alloc::string::ToString;
 type Hkdf = hkdf::Hkdf<Sha512>;
 
 #[cfg_attr(test, derive(Debug))]
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct IdentityKey(Option<SecretKey>, PublicKey);
 
 impl Key for IdentityKey {
