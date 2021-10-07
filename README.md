@@ -49,6 +49,8 @@ let ika = IdentityKey::default();
 let _iks = ika.strip(); // Without private key
 ```
 
+### WASM
+This crate supports WASM. In order to do that, enable the `wasm` feature.
 
 [1]: https://signal.org/docs/specifications/x3dh/
 
