@@ -48,22 +48,20 @@
 
 extern crate alloc;
 
-use p256::{SecretKey, PublicKey};
 use p256::ecdh::SharedSecret;
+use p256::ecdsa::{signature::Signer, Signature, SigningKey};
+use p256::ecdsa::{signature::Verifier, VerifyingKey};
 use p256::elliptic_curve::ecdh::diffie_hellman;
-use p256::{
-    ecdsa::{SigningKey, Signature, signature::Signer}
-};
-use p256::ecdsa::{VerifyingKey, signature::Verifier};
+use p256::{PublicKey, SecretKey};
 use sha2::Sha512;
 
-#[cfg(feature = "bytes")]
-use serde::{Serialize, Deserialize};
-use rand_core::{OsRng, RngCore};
-use core::str::FromStr;
-use alloc::vec::Vec;
 use alloc::string::String;
 use alloc::string::ToString;
+use alloc::vec::Vec;
+use core::str::FromStr;
+use rand_core::{OsRng, RngCore};
+#[cfg(feature = "bytes")]
+use serde::{Deserialize, Serialize};
 
 type Hkdf = hkdf::Hkdf<Sha512>;
 
@@ -74,7 +72,7 @@ pub struct IdentityKey(Option<SecretKey>, PublicKey);
 impl Key for IdentityKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
+        let public_key = private_key.public_key();
         Self(Some(private_key), public_key)
     }
 
@@ -98,7 +96,10 @@ impl Key for IdentityKey {
     }
 
     #[cfg(feature = "bytes")]
-    fn from_bytes(data: &[u8]) -> Result<Self, &'static str> where Self: Sized {
+    fn from_bytes(data: &[u8]) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
         let ex_key: ExKey = match bincode::deserialize(data) {
             Ok(d) => d,
             Err(_) => {
@@ -106,19 +107,15 @@ impl Key for IdentityKey {
             }
         };
         match ex_key.kind {
-            KeyType::Identity => {
-                Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key()))
-            }
-            _ => {
-                Err("Contains wrong key type")
-            }
+            KeyType::Identity => Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key())),
+            _ => Err("Contains wrong key type"),
         }
     }
 }
 
 impl From<&IdentityKey> for ExKey {
     fn from(ik: &IdentityKey) -> Self {
-        let private_key = ik.ex_private_key().map(|k| k.to_bytes().to_vec());
+        let private_key = ik.ex_private_key().map(|k| k.to_be_bytes().to_vec());
         let public_key = ik.ex_public_key().to_string().as_bytes().into();
         Self {
             kind: KeyType::Identity,
@@ -131,7 +128,7 @@ impl From<&IdentityKey> for ExKey {
 impl Drop for IdentityKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
+        self.1 = self.0.as_ref().unwrap().public_key();
     }
 }
 
@@ -140,7 +137,7 @@ pub struct EphemeralKey(Option<SecretKey>, PublicKey);
 impl Key for EphemeralKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
+        let public_key = private_key.public_key();
         Self(Some(private_key), public_key)
     }
 
@@ -164,27 +161,24 @@ impl Key for EphemeralKey {
     }
 
     #[cfg(feature = "bytes")]
-    fn from_bytes(data: &[u8]) -> Result<Self, &'static str> where Self: Sized {
+    fn from_bytes(data: &[u8]) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
         let ex_key: ExKey = match bincode::deserialize(data) {
             Ok(d) => d,
-            Err(_) => {
-                return Err("Error deserializing")
-            }
+            Err(_) => return Err("Error deserializing"),
         };
         match ex_key.kind {
-            KeyType::Ephemeral => {
-                Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key()))
-            }
-            _ => {
-                Err("Contains wrong key type")
-            }
+            KeyType::Ephemeral => Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key())),
+            _ => Err("Contains wrong key type"),
         }
     }
 }
 
 impl From<&EphemeralKey> for ExKey {
     fn from(ek: &EphemeralKey) -> Self {
-        let private_key = ek.ex_private_key().map(|k| k.to_bytes().to_vec());
+        let private_key = ek.ex_private_key().map(|k| k.to_be_bytes().to_vec());
         let public_key = ek.ex_public_key().to_string().as_bytes().into();
         Self {
             kind: KeyType::Ephemeral,
@@ -197,7 +191,7 @@ impl From<&EphemeralKey> for ExKey {
 impl Drop for EphemeralKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
+        self.1 = self.0.as_ref().unwrap().public_key();
     }
 }
 
@@ -212,7 +206,7 @@ impl SignedPreKey {
 impl Key for SignedPreKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
+        let public_key = private_key.public_key();
         Self(Some(private_key), public_key)
     }
 
@@ -236,32 +230,29 @@ impl Key for SignedPreKey {
     }
 
     #[cfg(feature = "bytes")]
-    fn from_bytes(data: &[u8]) -> Result<Self, &'static str> where Self: Sized {
+    fn from_bytes(data: &[u8]) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
         let ex_key: ExKey = match bincode::deserialize(data) {
             Ok(d) => d,
-            Err(_) => {
-                return Err("Error deserializing")
-            }
+            Err(_) => return Err("Error deserializing"),
         };
         match ex_key.kind {
-            KeyType::SignedPre => {
-                Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key()))
-            }
-            _ => {
-                Err("Contains wrong key type")
-            }
+            KeyType::SignedPre => Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key())),
+            _ => Err("Contains wrong key type"),
         }
     }
 }
 
 impl From<&SignedPreKey> for ExKey {
     fn from(spk: &SignedPreKey) -> Self {
-        let private_key = spk.ex_private_key().map(|k| k.to_bytes().to_vec());
+        let private_key = spk.ex_private_key().map(|k| k.to_be_bytes().to_vec());
         let public_key = spk.ex_public_key().to_string().as_bytes().into();
         Self {
             kind: KeyType::SignedPre,
             private_key,
-            public_key
+            public_key,
         }
     }
 }
@@ -269,7 +260,7 @@ impl From<&SignedPreKey> for ExKey {
 impl Drop for SignedPreKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
+        self.1 = self.0.as_ref().unwrap().public_key();
     }
 }
 
@@ -278,7 +269,7 @@ pub struct OneTimePreKey(Option<SecretKey>, PublicKey);
 impl Key for OneTimePreKey {
     fn default() -> Self {
         let private_key = SecretKey::random(&mut OsRng);
-        let public_key = PublicKey::from_secret_scalar(&private_key.to_secret_scalar());
+        let public_key = private_key.public_key();
         Self(Some(private_key), public_key)
     }
 
@@ -302,27 +293,24 @@ impl Key for OneTimePreKey {
     }
 
     #[cfg(feature = "bytes")]
-    fn from_bytes(data: &[u8]) -> Result<Self, &'static str> where Self: Sized {
+    fn from_bytes(data: &[u8]) -> Result<Self, &'static str>
+    where
+        Self: Sized,
+    {
         let ex_key: ExKey = match bincode::deserialize(data) {
             Ok(d) => d,
-            Err(_) => {
-                return Err("Error deserializing")
-            }
+            Err(_) => return Err("Error deserializing"),
         };
         match ex_key.kind {
-            KeyType::OneTimePre => {
-                Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key()))
-            }
-            _ => {
-                Err("Contains wrong key type")
-            }
+            KeyType::OneTimePre => Ok(Self(ex_key.ex_private_key(), ex_key.ex_public_key())),
+            _ => Err("Contains wrong key type"),
         }
     }
 }
 
 impl From<&OneTimePreKey> for ExKey {
     fn from(otpk: &OneTimePreKey) -> Self {
-        let private_key = otpk.ex_private_key().map(|k| k.to_bytes().to_vec());
+        let private_key = otpk.ex_private_key().map(|k| k.to_be_bytes().to_vec());
         let public_key = otpk.ex_public_key().to_string().as_bytes().into();
         Self {
             kind: KeyType::OneTimePre,
@@ -335,7 +323,7 @@ impl From<&OneTimePreKey> for ExKey {
 impl Drop for OneTimePreKey {
     fn drop(&mut self) {
         self.0 = Some(SecretKey::random(&mut OsRng));
-        self.1 = PublicKey::from_secret_scalar(&self.0.as_ref().unwrap().to_secret_scalar());
+        self.1 = self.0.as_ref().unwrap().public_key();
     }
 }
 
@@ -372,7 +360,9 @@ impl Drop for ExKey {
 
 impl ExKey {
     pub(crate) fn ex_private_key(&self) -> Option<SecretKey> {
-        self.private_key.clone().map(|k| SecretKey::from_bytes(&k).unwrap())
+        self.private_key
+            .clone()
+            .map(|k| SecretKey::from_be_bytes(&k).unwrap())
     }
 
     pub(crate) fn ex_public_key(&self) -> PublicKey {
@@ -388,10 +378,7 @@ pub trait Key {
     fn diffie_hellman<T: Key>(&self, other: &T) -> SharedSecret {
         let sk = self.ex_private_key().unwrap();
         let pk = other.ex_public_key();
-        diffie_hellman(
-            sk.to_secret_scalar().clone(),
-            pk.as_affine(),
-        )
+        diffie_hellman(sk.to_nonzero_scalar().clone(), pk.as_affine())
     }
     fn sign(&self, data: &[u8]) -> Signature {
         let signing_key = SigningKey::from(self.ex_private_key().unwrap());
@@ -406,14 +393,22 @@ pub trait Key {
     #[cfg(feature = "bytes")]
     fn to_bytes(&self) -> Vec<u8>;
     #[cfg(feature = "bytes")]
-    fn from_bytes(data: &[u8]) -> Result<Self, &'static str> where Self: Sized;
+    fn from_bytes(data: &[u8]) -> Result<Self, &'static str>
+    where
+        Self: Sized;
 }
 
-pub fn x3dh_a(signature: &Signature, ika: &IdentityKey, spkb: &SignedPreKey,
-              eka: &EphemeralKey, ikb: &IdentityKey, opkb: &OneTimePreKey) -> Result<[u8; 32], &'static str> {
+pub fn x3dh_a(
+    signature: &Signature,
+    ika: &IdentityKey,
+    spkb: &SignedPreKey,
+    eka: &EphemeralKey,
+    ikb: &IdentityKey,
+    opkb: &OneTimePreKey,
+) -> Result<[u8; 32], &'static str> {
     let result = ikb.verify(&spkb.pk_to_bytes(), signature);
     if !result {
-        return Err("Signature couldn't be verified")
+        return Err("Signature couldn't be verified");
     }
     let mut dh1 = ika.diffie_hellman(spkb).as_bytes().to_vec();
     let mut dh2 = eka.diffie_hellman(ikb).as_bytes().to_vec();
@@ -433,8 +428,13 @@ pub fn x3dh_a(signature: &Signature, ika: &IdentityKey, spkb: &SignedPreKey,
     Ok(okm)
 }
 
-pub fn x3dh_b(ika: &IdentityKey, spkb: &SignedPreKey,
-              eka: &EphemeralKey, ikb: &IdentityKey, opkb: &OneTimePreKey) -> [u8; 32] {
+pub fn x3dh_b(
+    ika: &IdentityKey,
+    spkb: &SignedPreKey,
+    eka: &EphemeralKey,
+    ikb: &IdentityKey,
+    opkb: &OneTimePreKey,
+) -> [u8; 32] {
     let mut dh1 = spkb.diffie_hellman(ika).as_bytes().to_vec();
     let mut dh2 = ikb.diffie_hellman(eka).as_bytes().to_vec();
     let mut dh3 = spkb.diffie_hellman(eka).as_bytes().to_vec();
@@ -466,7 +466,7 @@ pub fn calc_ad(ika: &IdentityKey, ikb: &IdentityKey) -> Vec<u8> {
 
 #[cfg(test)]
 mod x3dh_test {
-    use crate::{IdentityKey, Key, SignedPreKey, EphemeralKey, OneTimePreKey, x3dh_a, x3dh_b};
+    use crate::{x3dh_a, x3dh_b, EphemeralKey, IdentityKey, Key, OneTimePreKey, SignedPreKey};
 
     #[test]
     fn x3dh_test() {
@@ -611,7 +611,7 @@ mod ephemeral_key_test {
 
 #[cfg(test)]
 mod signed_pre_key_test {
-    use crate::{SignedPreKey, Key};
+    use crate::{Key, SignedPreKey};
 
     #[test]
     fn signed_pre_key_dh() {
@@ -671,7 +671,7 @@ mod signed_pre_key_test {
 
 #[cfg(test)]
 mod one_time_pre_key_test {
-    use crate::{OneTimePreKey, Key};
+    use crate::{Key, OneTimePreKey};
 
     #[test]
     fn one_time_pre_key_dh() {
